@@ -54,19 +54,20 @@ def reg_acc(row):
 
             }, 'verify_ssl': False
         }
+        res = requests.get(
+            f'https://2captcha.com/in.php?key={_2captcha_api_key}&method=userrecaptcha&googlekey={G_SITEKEY}&json=1&pageurl={TEESPRING_COM_SIGNUP}')
+        print(res.text)
+
         driver = webdriver.Firefox(seleniumwire_options=options)
         driver.implicitly_wait(10)
         driver.get('https://teespring.com/signup')
-        form = driver.find_elements_by_css_selector('.js-email-signup-form')[0]
+        form = driver.find_element_by_css_selector('.js-email-signup-form')
         email_input = form.find_element_by_css_selector('[name=email]')
         password_input = form.find_element_by_css_selector('[name=password]')
         password2_input = form.find_element_by_css_selector('[name=password_confirmation]')
         email_input.send_keys(email)
         password_input.send_keys(password)
         password2_input.send_keys(password)
-        res = requests.get(
-            f'https://2captcha.com/in.php?key={_2captcha_api_key}&method=userrecaptcha&googlekey={G_SITEKEY}&json=1&pageurl={TEESPRING_COM_SIGNUP}')
-        print(res.text)
 
         request_id = res.json()['request']
         code = 'CAPCHA_NOT_READY'
@@ -84,7 +85,16 @@ def reg_acc(row):
         tx = form.find_element_by_css_selector('textarea')
         driver.execute_script(f"arguments[0].innerHTML='{code}'", tx)
         form.find_element_by_css_selector("[type='submit']").click()
-        WebDriverWait(driver, 20).until(expected_conditions.url_to_be('https://teespring.com/welcome'))
+        try:
+            WebDriverWait(driver, 10).until(
+                expected_conditions.url_changes("https://teespring.com/signup"))
+        except:  # login failed
+            err = ''
+            for e in driver.find_elements_by_css_selector('.js-email-signup-form .form__error'):
+                err += e.text
+            row[4].value = err
+            save_result()
+            return
         row[3].value = "Reg."
 
         driver.get('https://teespring.com/dashboard/settings')
@@ -95,7 +105,7 @@ def reg_acc(row):
         email2_input.send_keys(email)
         form.find_element_by_css_selector('[type=submit]').click()
         row[3].value += "Paypal."
-        row[2].value = "Yes"
+        row[2].value = "Done"
     except Exception as e:
         row[4].value = str(e)
         save_result()
@@ -104,9 +114,8 @@ def reg_acc(row):
         row[4].value = ''
         save_result()
     finally:
-        pass
-        # if driver:
-        #     driver.close()
+        if driver:
+            driver.close()
 
 
 TEESPRING_COM_SIGNUP = 'https://teespring.com/signup'
