@@ -8,6 +8,7 @@ from threading import Lock
 
 import requests
 from openpyxl import load_workbook
+from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 from seleniumwire import webdriver
@@ -57,8 +58,12 @@ def reg_acc(row):
         res = requests.get(
             f'https://2captcha.com/in.php?key={_2captcha_api_key}&method=userrecaptcha&googlekey={G_SITEKEY}&json=1&pageurl={TEESPRING_COM_SIGNUP}')
         print(res.text)
+        profile = webdriver.FirefoxProfile()
+        profile.set_preference('intl.accept_languages', 'en-US, en')
+        options2 = Options()
+        options2.headless = config['default']['view'] != "True"
 
-        driver = webdriver.Firefox(seleniumwire_options=options)
+        driver = webdriver.Firefox(seleniumwire_options=options, firefox_profile=profile, options=options2)
         driver.implicitly_wait(10)
         driver.get('https://teespring.com/signup')
         form = driver.find_element_by_css_selector('.js-email-signup-form')
