@@ -35,6 +35,7 @@ result_lock = Lock()
 
 def save_result():
     with result_lock:
+        wb.save(filename='backup.' + filename)
         wb.save(filename=filename)
 
 
