@@ -35,8 +35,11 @@ result_lock = Lock()
 
 def save_result():
     with result_lock:
-        wb.save(filename='backup.' + filename)
         wb.save(filename=filename)
+        wb.save(filename='dup' + filename)
+        with open(filename + '.txt', 'w') as outfile:
+            for row in wb.active.rows:
+                outfile.write('\t'.join([i.value for i in row]))
 
 
 def reg_acc(row):
